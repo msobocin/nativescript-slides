@@ -233,6 +233,7 @@ var SlideContainer = (function (_super) {
         });
     };
     SlideContainer.prototype.constructSlide = function() {
+      var _this = this;
       if (app.android && _this.androidTranslucentStatusBar === true || _this._androidTranslucentNavBar === true && Platform.device.sdkVersion >= '19') {
           var window_1 = app.android.startActivity.getWindow();
           if (_this._androidTranslucentStatusBar === true) {

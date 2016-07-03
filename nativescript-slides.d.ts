@@ -50,6 +50,7 @@ export declare class SlideContainer extends AbsoluteLayout {
     constructor();
     private setupDefaultValues();
     constructView(constructor?: boolean): void;
+    constructSlide(): void;
     private carousel(isenabled, time);
     private rebindSlideShow();
     stopSlideshow(): void;

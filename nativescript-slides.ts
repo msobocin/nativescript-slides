@@ -173,7 +173,7 @@ export class SlideContainer extends AbsoluteLayout {
 		// if being used in an ng2 app we want to prevent it from excuting the constructView
 		// until it is called manually in ngAfterViewInit.
 
-		this.constructView(true);
+		//this.constructView(true);
 	}
 
 	private setupDefaultValues(): void {
@@ -204,7 +204,7 @@ export class SlideContainer extends AbsoluteLayout {
 		if (this._pageIndicators == null) {
 			this._pageIndicators = false;
 		}
-		
+
 		if (this.indicatorsColor == null) {
 			this.indicatorsColor = "#fff"; //defaults to white.
 		}
@@ -221,86 +221,88 @@ export class SlideContainer extends AbsoluteLayout {
 				if (this.angular === true && constructor === true) {
 					return;
 				}
-				// Android Translucent bars API >= 19 only
 
-				if (app.android && this.androidTranslucentStatusBar === true || this._androidTranslucentNavBar === true && Platform.device.sdkVersion >= '19') {
-					let window = app.android.startActivity.getWindow();
+			}
+		});
+	}
+  public constructSlide(): void {
+		// Android Translucent bars API >= 19 only
 
-					// check for status bar
-					if (this._androidTranslucentStatusBar === true) {
-						window.addFlags(LayoutParams.FLAG_TRANSLUCENT_STATUS);
-					}
+		if (app.android && this.androidTranslucentStatusBar === true || this._androidTranslucentNavBar === true && Platform.device.sdkVersion >= '19') {
+			let window = app.android.startActivity.getWindow();
 
-					// check for nav bar
-					if (this._androidTranslucentNavBar === true) {
-						window.addFlags(LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
-					}
-				}
+			// check for status bar
+			if (this._androidTranslucentStatusBar === true) {
+				window.addFlags(LayoutParams.FLAG_TRANSLUCENT_STATUS);
+			}
 
-				let slides: StackLayout[] = [];
+			// check for nav bar
+			if (this._androidTranslucentNavBar === true) {
+				window.addFlags(LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+			}
+		}
 
+		let slides: StackLayout[] = [];
+
+		this.eachLayoutChild((view: View) => {
+			if (view instanceof StackLayout) {
+				AbsoluteLayout.setLeft(view, this.pageWidth);
+				view.width = this.pageWidth;
+				(<any>view).height = '100%'; //get around compiler
+				slides.push(view);
+			}
+		});
+
+		if (this.pageIndicators) {
+
+			let iColor = this.indicatorsColor;
+			//check if invalid and set to white (#fff)
+			if (!Color.isValid(iColor)) {
+				iColor = '#fff';
+			}
+
+			this._footer = this.buildFooter(slides.length, 0, iColor);
+			this.insertChild(this._footer, this.getChildrenCount());
+			//	this.setActivePageIndicator(0);
+		}
+
+
+		this.currentPanel = this.buildSlideMap(slides);
+		this.currentPanel.panel.translateX = -this.pageWidth;
+
+		if (this.disablePan === false) {
+			this.applySwipe(this.pageWidth);
+		}
+
+		//handles application orientation change
+		app.on(app.orientationChangedEvent, (args: app.OrientationChangedEventData) => {
+			//event and page orientation didn't seem to alwasy be on the same page so setting it in the time out addresses this.
+			setTimeout(() => {
+				this._pageWidth = Platform.screen.mainScreen.widthDIPs;
 				this.eachLayoutChild((view: View) => {
 					if (view instanceof StackLayout) {
 						AbsoluteLayout.setLeft(view, this.pageWidth);
 						view.width = this.pageWidth;
-						(<any>view).height = '100%'; //get around compiler
-						slides.push(view);
 					}
 				});
-
-				if (this.pageIndicators) {
-
-					let iColor = this.indicatorsColor;
-					//check if invalid and set to white (#fff)
-					if (!Color.isValid(iColor)) {
-						iColor = '#fff';
-					}
-
-					this._footer = this.buildFooter(slides.length, 0, iColor);
-					this.insertChild(this._footer, this.getChildrenCount());
-					//	this.setActivePageIndicator(0);
-				}
-
-
-				this.currentPanel = this.buildSlideMap(slides);
-				this.currentPanel.panel.translateX = -this.pageWidth;
 
 				if (this.disablePan === false) {
 					this.applySwipe(this.pageWidth);
 				}
-
-				//handles application orientation change
-				app.on(app.orientationChangedEvent, (args: app.OrientationChangedEventData) => {
-					//event and page orientation didn't seem to alwasy be on the same page so setting it in the time out addresses this.
-					setTimeout(() => {
-						this._pageWidth = Platform.screen.mainScreen.widthDIPs;
-						this.eachLayoutChild((view: View) => {
-							if (view instanceof StackLayout) {
-								AbsoluteLayout.setLeft(view, this.pageWidth);
-								view.width = this.pageWidth;
-							}
-						});
-
-						if (this.disablePan === false) {
-							this.applySwipe(this.pageWidth);
-						}
-						let topOffset = Platform.screen.mainScreen.heightDIPs - 105;
-						if (this.pageIndicators) {
-							this._footer.marginTop = <any>'88%';
-						}
-						this.currentPanel.panel.translateX = -this.pageWidth;
-					}, 100);
-				});
-			}
+				let topOffset = Platform.screen.mainScreen.heightDIPs - 105;
+				if (this.pageIndicators) {
+					this._footer.marginTop = <any>'88%';
+				}
+				this.currentPanel.panel.translateX = -this.pageWidth;
+			}, 100);
 		});
 	}
-
 	private carousel(isenabled: boolean, time: number) {
 		if (isenabled) {
 			this.timer_reference = setInterval(() => {
 				if (typeof this.currentPanel.right !== "undefined") {
 					this.nextSlide();
-					
+
 				} else {
 					clearTimeout(this.timer_reference);
 				}
@@ -400,12 +402,12 @@ export class SlideContainer extends AbsoluteLayout {
 				}
 
 				// swiping left to right.
-				if (args.deltaX > (pageWidth / 3) || (this.velocityScrolling && endingVelocity > 32)) { 
+				if (args.deltaX > (pageWidth / 3) || (this.velocityScrolling && endingVelocity > 32)) {
 					if (this.hasPrevious) {
 						this.transitioning = true;
 						this.showLeftSlide(this.currentPanel, args.deltaX, endingVelocity).then(() => {
 							this.setupPanel(this.currentPanel.left);
-							
+
 							this.triggerChangeEventLeftToRight();
 						});
 					}else{
@@ -414,7 +416,7 @@ export class SlideContainer extends AbsoluteLayout {
 						this.triggerCancelEvent(cancellationReason.noPrevSlides);
 					}
 					return;
-				} 
+				}
 				// swiping right to left
 				else if (args.deltaX < (-pageWidth / 3) || (this.velocityScrolling && endingVelocity < -32)) {
 					if (this.hasNext) {

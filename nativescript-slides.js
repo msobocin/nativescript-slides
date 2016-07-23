@@ -289,7 +289,7 @@ var SlideContainer = (function (_super) {
         var _this = this;
         if (isenabled) {
             this.timer_reference = setInterval(function () {
-                if (typeof _this.currentPanel.right !== "undefined") {
+                if (_this.currentPanel && typeof _this.currentPanel.right !== "undefined") {
                     _this.nextSlide();
                 }
                 else {
